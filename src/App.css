@@ -1,0 +1,1229 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap");
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+:root {
+	--bg: #07080c;
+	--surface: #0d0f15;
+	--surface2: #12141c;
+	--border: #fff;
+	--border2: #bbb;
+	--text: #fff;
+	--text2: #bbb;
+	--accent: #00ffb3;
+	--font-sans: "Orbitron", sans-serif;
+	--font-mono: "Space Mono", monospace;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+}
+
+body {
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+}
+
+/* ── SCROLLBAR ── */
+*::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background: #fff;
+	border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background: #fff;
+}
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #fff transparent;
+}
+
+.layout {
+	display: flex;
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar-no-auto-css {
+	width: 260px;
+	min-width: 260px;
+	border-right: 0.1px solid var(--border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: transparent;
+}
+
+.sidebar-head {
+	padding: 20px 20px 0;
+}
+
+.wordmark {
+	font-family: var(--font-sans);
+	font-size: 14px;
+	font-weight: 800;
+	letter-spacing: 0.25em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.tagline {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.12em;
+	color: var(--text2);
+	margin-top: 2px;
+	text-transform: uppercase;
+}
+
+.tab-row {
+	display: flex;
+	margin: 16px 0 0;
+	border-bottom: 0.1px solid var(--border);
+}
+
+.tab-btn {
+	flex: 1;
+	background: none;
+	border: none;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	font-weight: 500;
+	color: var(--text2);
+	padding: 10px 0 9px;
+	position: relative;
+	transition: color 0.15s;
+	text-transform: uppercase;
+}
+
+.tab-btn.active {
+	color: var(--text);
+}
+
+.tab-btn.active::after {
+	content: "";
+	position: absolute;
+	bottom: -1px;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--border);
+}
+
+.sidebar-search {
+	padding: 10px 14px;
+	border-bottom: 0.1px solid var(--border2);
+}
+
+.search-input {
+	width: 100%;
+	background: var(--surface2);
+	border: 0.1px solid var(--border2);
+	border-radius: 6px;
+	padding: 7px 10px;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--text);
+	outline: none;
+	transition: border-color 0.15s;
+}
+
+.search-input::placeholder {
+	color: var(--text2);
+}
+
+.search-input:focus {
+	border-color: var(--border);
+}
+
+.sidebar-list {
+	flex: 1;
+	overflow-y: auto;
+}
+
+/* ── SIDEBAR GROUPS ── */
+
+.sidebar-group-meta {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text2);
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.sidebar-group-hd {
+	padding: 6px 14px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	user-select: none;
+	border-bottom: 0.1px solid var(--border);
+	transition: border-color 0.1s;
+}
+
+.sidebar-group-label {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	color: var(--text2);
+	text-transform: uppercase;
+}
+
+.sidebar-item {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 9px 14px 9px 20px;
+	border-bottom: 0.1px solid var(--border);
+	position: relative;
+	transition: border-color 0.1s;
+}
+
+.sidebar-item-route {
+	font-size: 12px;
+	color: var(--text);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+}
+
+.sidebar-footer {
+	padding: 12px 14px;
+	border-top: 0.1px solid var(--border);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text2);
+	letter-spacing: 0.06em;
+	display: flex;
+	justify-content: space-between;
+}
+
+/* ── BADGE ── */
+.badge {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	padding: 3px 7px;
+	border-radius: 3px;
+	display: inline-block;
+	min-width: 46px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+/* ── MAIN ── */
+.main {
+	flex: 1;
+	overflow-y: auto;
+	padding: 32px 36px;
+}
+
+/* ── MAIN GROUPS ── */
+.group-section {
+	border: 1px solid transparent;
+	border-radius: 8px;
+	padding: 8px;
+	background: transparent;
+	margin-top: 20px;
+}
+
+.group-hd {
+	color: var(--text);
+	border: 1px solid transparent;
+	border-radius: 8px;
+	padding: 8px;
+	margin-bottom: 28px;
+	display: flex;
+	background: transparent;
+}
+
+.group-hd-label-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 8px;
+}
+
+.group-hd-label {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text2);
+	white-space: nowrap;
+}
+
+.group-hd-count {
+	font-size: 11px;
+	color: var(--text2);
+	white-space: nowrap;
+}
+
+.group-hd-toggle {
+	font-size: 12px;
+	color: var(--text2);
+	width: 14px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.meta-group-toggle {
+	font-size: 12px;
+	color: var(--text2);
+	width: 14px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.meta-group {
+	border: 1px solid transparent;
+	border-radius: 8px;
+	padding: 8px;
+	margin-bottom: 36px;
+	background: transparent;
+}
+
+.meta-group-hd {
+	border: 1px solid transparent;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+	user-select: none;
+	transition: border-color 0.1s;
+	padding-right: 10px;
+}
+
+.meta-group-label-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 8px;
+}
+
+.meta-group-label {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text2);
+	white-space: nowrap;
+}
+
+.meta-group-count {
+	font-size: 11px;
+	color: var(--text2);
+	white-space: nowrap;
+}
+
+/* ── ENDPOINT CARD ── */
+.ep-card {
+	overflow: hidden;
+	margin-bottom: 12px;
+	transition: border-color 0.15s;
+	background: transparent;
+}
+
+.security-layer:hover {
+	border-color: var(--border);
+}
+
+.ep-card-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 16px;
+	user-select: none;
+}
+
+.ep-route {
+	color: var(--text2) !important;
+	font-family: var(--font-mono);
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text);
+	flex: 1;
+}
+
+.ep-toggle {
+	font-size: 12px;
+	color: var(--accent);
+	width: 18px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.ep-toggle--open {
+	color: var(--color-delete);
+}
+
+.ep-body {
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.ep-meta-grid {
+	display: grid;
+	grid-template-columns: 90px 1fr;
+	gap: 6px 0;
+}
+
+.meta-label {
+	font-size: 11px;
+	color: var(--text2);
+	letter-spacing: 0.06em;
+	padding-top: 0.1px;
+	text-transform: uppercase;
+}
+
+.meta-value {
+	font-size: 13px;
+	color: var(--text);
+	line-height: 1.5;
+}
+
+.ep-section-head {
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	color: var(--text2);
+	text-transform: uppercase;
+	margin-bottom: 8px;
+	margin-top: 8px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.ep-section-head::after {
+	content: "";
+	flex: 1;
+	height: 0.1px;
+	background: var(--border);
+}
+
+/* useMaskSpotlight clones content into an overlay for the text-glow
+   effect. background-clip:text on that overlay only governs the
+   overlay's own box — it doesn't reach into a descendant's generated
+   content, so decorative pseudo-elements (like .ep-section-head::after's
+   trailing line above) get re-rendered at full opacity inside the clone
+   instead of clipping to glyphs like real text does. They're chrome, not
+   content, so suppress them everywhere inside the clone. */
+.ms-glow-clone *::before,
+.ms-glow-clone *::after {
+	content: none !important;
+}
+
+.constraint-row {
+	display: flex;
+	gap: 8px;
+	padding: 5px 0;
+	border-bottom: 0.1px solid var(--border);
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+.constraint-row:last-child {
+	border-bottom: none;
+}
+
+.constraint-tag {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	padding: 3px 6px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	margin-top: 0.1px;
+	text-transform: uppercase;
+	align-self: flex-start;
+}
+
+/* ── PAGE CARD ── */
+.page-card {
+	overflow: hidden;
+	margin-bottom: 12px;
+	transition: border-color 0.15s;
+	background: transparent;
+}
+
+.page-card-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 16px;
+	user-select: none;
+}
+
+.page-name {
+	font-size: 15px;
+	font-weight: 700;
+	margin-right: 6px;
+	color: var(--text);
+}
+
+.page-path {
+	font-size: 12px;
+	color: var(--text2);
+	margin-left: 2px;
+}
+
+.page-body {
+	padding: 16px;
+	animation: slideDown 0.15s ease-out;
+}
+
+.role-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	padding: 4px 10px;
+	border-radius: 99px;
+	border: 0.1px solid;
+	text-transform: uppercase;
+	margin-right: 6px;
+	margin-bottom: 6px;
+}
+
+.page-desc {
+	font-size: 13px;
+	color: var(--text);
+	line-height: 1.7;
+	margin: 10px 0 16px;
+}
+
+/* ── DETAIL PANEL ── */
+.panel-title {
+	font-size: 24px;
+	font-weight: 800;
+	color: var(--text);
+	margin-bottom: 4px;
+}
+
+.panel-sub {
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	color: var(--text2);
+	margin-bottom: 28px;
+	text-transform: uppercase;
+}
+
+/* ── HIGHLIGHT ── */
+.highlight-ring {
+	outline: 2px solid #ffd166;
+	outline-offset: 2px;
+	border-radius: 10px;
+}
+
+/* ── STAT CHIPS ── */
+.stat-row {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-bottom: 24px;
+}
+
+.stat-chip {
+	border: 0.1px solid var(--border);
+	border-radius: 8px;
+	padding: 10px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 90px;
+}
+
+.stat-chip-num {
+	font-size: 24px;
+	font-weight: 800;
+	color: var(--text);
+	line-height: 1;
+}
+
+.stat-chip-label {
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	color: var(--text2);
+	text-transform: uppercase;
+}
+
+.stat-chip-label--sm {
+	font-size: 10px;
+}
+
+/* ── METHOD COLORS ── */
+:root {
+	--color-get: #00ffb3;
+	--color-post: #3dc9ff;
+	--color-put: #ffe066;
+	--color-delete: #ff3d5e;
+	--color-ws: #d07aff;
+	--color-sse: #ff8c3a;
+}
+
+/* ── ROLE COLORS ── */
+:root {
+	--color-frontend-lead: #3dc9ff;
+	--color-backend-lead: #00ffb3;
+	--color-telemetry-engineer: #ffe066;
+	--color-ai-engineer: #d07aff;
+	--color-platform-engineer: #ff8c3a;
+}
+
+/* ── CONSTRAINT TAG COLORS ── */
+:root {
+	--color-constraint-sec: #ff3d5e;
+	--color-constraint-rate: #ff8c3a;
+	--color-constraint-realtime: #d07aff;
+	--color-constraint-fallback: #ffe066;
+	--color-constraint-dedup: #3dc9ff;
+	--color-constraint-crit: #00ffb3;
+}
+
+/* ── COLOR UTILITY (stat chips, method nums) ── */
+.color--get {
+	color: var(--color-get);
+}
+.color--post {
+	color: var(--color-post);
+}
+.color--put {
+	color: var(--color-put);
+}
+.color--delete {
+	color: var(--color-delete);
+}
+.color--ws {
+	color: var(--color-ws);
+}
+.color--sse {
+	color: var(--color-sse);
+}
+
+/* ── BADGE VARIANTS ── */
+.badge--get {
+	color: var(--color-get);
+	background: color-mix(in srgb, var(--color-get) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-get) 35%, transparent);
+}
+.badge--post {
+	color: var(--color-post);
+	background: color-mix(in srgb, var(--color-post) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-post) 35%, transparent);
+}
+.badge--put {
+	color: var(--color-put);
+	background: color-mix(in srgb, var(--color-put) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-put) 35%, transparent);
+}
+.badge--delete {
+	color: var(--color-delete);
+	background: color-mix(in srgb, var(--color-delete) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-delete) 35%, transparent);
+}
+.badge--ws {
+	color: var(--color-ws);
+	background: color-mix(in srgb, var(--color-ws) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-ws) 35%, transparent);
+}
+.badge--sse {
+	color: var(--color-sse);
+	background: color-mix(in srgb, var(--color-sse) 12%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-sse) 35%, transparent);
+}
+
+/* ── FILTER CHIP ACTIVE VARIANTS ── */
+.filter-chip--all.active {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--bg);
+}
+.filter-chip--get.active {
+	background: var(--color-get);
+	border-color: var(--color-get);
+	color: var(--bg);
+}
+.filter-chip--post.active {
+	background: var(--color-post);
+	border-color: var(--color-post);
+	color: var(--bg);
+}
+.filter-chip--put.active {
+	background: var(--color-put);
+	border-color: var(--color-put);
+	color: var(--bg);
+}
+.filter-chip--delete.active {
+	background: var(--color-delete);
+	border-color: var(--color-delete);
+	color: var(--bg);
+}
+.filter-chip--ws.active {
+	background: var(--color-ws);
+	border-color: var(--color-ws);
+	color: var(--bg);
+}
+.filter-chip--sse.active {
+	background: var(--color-sse);
+	border-color: var(--color-sse);
+	color: var(--bg);
+}
+
+/* ── ROLE COLOR CLASSES ── */
+.role--frontend-lead {
+	color: var(--color-frontend-lead);
+}
+.role--backend-lead {
+	color: var(--color-backend-lead);
+}
+.role--telemetry-engineer {
+	color: var(--color-telemetry-engineer);
+}
+.role--ai-engineer {
+	color: var(--color-ai-engineer);
+}
+.role--platform-engineer {
+	color: var(--color-platform-engineer);
+}
+
+/* ── ROLE PILL VARIANTS ── */
+.role-pill.role--frontend-lead {
+	border-color: color-mix(
+		in srgb,
+		var(--color-frontend-lead) 40%,
+		transparent
+	);
+	background: color-mix(in srgb, var(--color-frontend-lead) 10%, transparent);
+}
+.role-pill.role--backend-lead {
+	border-color: color-mix(
+		in srgb,
+		var(--color-backend-lead) 40%,
+		transparent
+	);
+	background: color-mix(in srgb, var(--color-backend-lead) 10%, transparent);
+}
+.role-pill.role--telemetry-engineer {
+	border-color: color-mix(
+		in srgb,
+		var(--color-telemetry-engineer) 40%,
+		transparent
+	);
+	background: color-mix(
+		in srgb,
+		var(--color-telemetry-engineer) 10%,
+		transparent
+	);
+}
+.role-pill.role--ai-engineer {
+	border-color: color-mix(in srgb, var(--color-ai-engineer) 40%, transparent);
+	background: color-mix(in srgb, var(--color-ai-engineer) 10%, transparent);
+}
+.role-pill.role--platform-engineer {
+	border-color: color-mix(
+		in srgb,
+		var(--color-platform-engineer) 40%,
+		transparent
+	);
+	background: color-mix(
+		in srgb,
+		var(--color-platform-engineer) 10%,
+		transparent
+	);
+}
+
+/* ── META VALUE VARIANTS ── */
+.meta-value--service {
+	color: var(--color-get);
+}
+.meta-value--tables {
+	color: var(--color-put);
+}
+.meta-value--payload {
+	color: var(--color-post);
+}
+
+/* ── CONSTRAINT TAG VARIANTS ── */
+.constraint-tag--sec {
+	color: var(--color-constraint-sec);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-sec) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-sec) 35%, transparent);
+}
+.constraint-tag--rate {
+	color: var(--color-constraint-rate);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-rate) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-rate) 35%, transparent);
+}
+.constraint-tag--realtime {
+	color: var(--color-constraint-realtime);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-realtime) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-realtime) 35%, transparent);
+}
+.constraint-tag--fallback {
+	color: var(--color-constraint-fallback);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-fallback) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-fallback) 35%, transparent);
+}
+.constraint-tag--dedup {
+	color: var(--color-constraint-dedup);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-dedup) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-dedup) 35%, transparent);
+}
+.constraint-tag--crit {
+	color: var(--color-constraint-crit);
+	background: color-mix(
+		in srgb,
+		var(--color-constraint-crit) 14%,
+		transparent
+	);
+	border: 1px solid
+		color-mix(in srgb, var(--color-constraint-crit) 35%, transparent);
+}
+
+/* ── VISIBILITY BADGE (Internal / External on endpoint cards) ── */
+.visibility-badge {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	padding: 3px 7px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	border: 1px solid;
+}
+
+.visibility-badge--ext {
+	color: var(--color-ext);
+	background: color-mix(in srgb, var(--color-ext) 12%, transparent);
+	border-color: color-mix(in srgb, var(--color-ext) 35%, transparent);
+}
+
+.visibility-badge--int {
+	color: var(--color-int);
+	background: color-mix(in srgb, var(--color-int) 12%, transparent);
+	border-color: color-mix(in srgb, var(--color-int) 35%, transparent);
+}
+
+/* ── VISIBILITY FILTER STRIP ── */
+.visibility-filter-strip {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 24px;
+	flex-wrap: wrap;
+}
+
+.visibility-filter-btn {
+	background: none;
+	border: 0.1px solid var(--border2);
+	border-radius: 5px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	padding: 5px 11px;
+	color: var(--text);
+	transition: all 0.12s;
+	text-transform: uppercase;
+}
+
+.visibility-filter-btn:hover {
+	border-color: var(--border2);
+}
+
+.visibility-filter-btn--all.active {
+	background: color-mix(in srgb, var(--accent) 15%, transparent);
+	border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+	color: var(--accent);
+}
+
+.visibility-filter-btn--ext.active {
+	background: color-mix(in srgb, var(--color-ext) 15%, transparent);
+	border-color: color-mix(in srgb, var(--color-ext) 50%, transparent);
+	color: var(--color-ext);
+}
+
+.visibility-filter-btn--int.active {
+	background: color-mix(in srgb, var(--color-int) 15%, transparent);
+	border-color: color-mix(in srgb, var(--color-int) 50%, transparent);
+	color: var(--color-int);
+}
+
+.visibility-filter-hint {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text2);
+	letter-spacing: 0.04em;
+	margin-left: 4px;
+	font-style: italic;
+}
+
+.meta-group-badge--external,
+.meta-group-badge--internal,
+
+
+/* ── SIDEBAR META HEADER ── */
+.sidebar-meta-hd {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 8px 14px 5px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text2);
+	border-bottom: 0.1px solid var(--border);
+	user-select: none;
+	transition: border-color 0.1s;
+}
+
+.sidebar-meta-toggle {
+	margin-left: auto;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--text2);
+}
+
+/* ── External / Internal COLORS ── */
+:root {
+	--color-ext: #00ffb3;
+	--color-int: #ffe066;
+}
+
+.color--ext {
+	color: var(--color-ext);
+}
+.color--int {
+	color: var(--color-int);
+}
+
+.constraint-text {
+	color: var(--text);
+	font-family: var(--font-mono);
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+/* ── TAB TRANSITION ── */
+.tab-view {
+	animation-duration: 0.22s;
+	animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+	animation-fill-mode: both;
+}
+
+.tab-view--from-right {
+	animation-name: slideFromRight;
+}
+
+.tab-view--from-left {
+	animation-name: slideFromLeft;
+}
+
+@keyframes slideFromRight {
+	from {
+		opacity: 0;
+		transform: translateX(28px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes slideFromLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-28px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* ── COLLAPSIBLE ANIMATION ── */
+.collapsible {
+	max-height: 0;
+	overflow: hidden;
+	transition:
+		max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+		opacity 0.3s ease;
+	opacity: 0;
+}
+
+.collapsible--open {
+	max-height: 9999px;
+	opacity: 1;
+	transition:
+		max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+		opacity 0.35s ease 0.06s;
+}
+
+/* ── AUTH STRATEGY PILLS ── */
+.auth-strat-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 4px;
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	border: 1px solid transparent;
+	background: transparent;
+	transition:
+		opacity 0.15s,
+		border-color 0.15s,
+		background 0.15s;
+	color: inherit;
+}
+
+.auth-strat-pill:hover {
+	opacity: 0.85;
+	border-color: currentColor;
+}
+
+.auth-strat-pill--open {
+	border-color: currentColor;
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.auth-strat-pill-chevron {
+	font-size: 7px;
+	opacity: 0.7;
+}
+
+.auth-strat-inline {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.auth-strat-inline-label {
+	font-size: 10px;
+	color: var(--text2);
+	margin-bottom: 8px;
+}
+
+.meta-label--auth {
+	padding-top: 4px;
+}
+
+.meta-value--auth {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	align-items: center;
+}
+
+.security-note {
+	margin-top: 12px;
+	padding: 8px 4px;
+	font-style: italic;
+	color: var(--text2);
+}
+
+.sidebar-item-path {
+	font-size: 9px;
+	color: var(--text2);
+}
+
+.page-card--open {
+	border-color: var(--border2);
+}
+
+.page-card-header-flex {
+	flex: 1;
+}
+
+.text-mono-small {
+	font-family: var(--font-mono);
+	font-size: 10px;
+}
+
+.security-meta-grid {
+	gap: 6px 12px;
+}
+
+.meta-value--mono {
+	font-family: var(--font-mono);
+}
+
+.static-page-msg {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text);
+}
+
+/* ── PAYLOAD SECTION (collapsible Request/Response card) ── */
+.payload-section-head {
+	cursor: pointer;
+	user-select: none;
+}
+
+.payload-section-body {
+	background: var(--surface2);
+	border: 0.1px solid var(--border2);
+	border-radius: 6px;
+	padding: 10px 12px;
+}
+
+/* ── USED BY PAGES (collapsible, same structure as payload-section) ── */
+.used-by-section {
+	margin-bottom: 14px;
+	/* .payload-section is a direct child of .ep-body (display:flex), so it
+	   gets a BFC "for free" — flex items establish one for their own
+	   contents — which traps used-by-head's margin-top inside the wrap
+	   and turns it into real padding above the header. .used-by-section
+	   sits one level deeper (inside ConstraintSection's plain wrapper
+	   div), so without its own BFC that same margin collapses and gets
+	   trapped one level too high — above this element instead of inside
+	   it — leaving no internal gap for the spotlight's top border to
+	   clear. flow-root establishes the BFC directly, with no overflow
+	   clipping side effects. */
+	display: flow-root;
+}
+
+.used-by-section-body {
+	padding-top: 8px;
+}
+
+.shape-frame {
+	display: block;
+}
+
+.shape-frame-sep {
+	height: 8px;
+}
+
+.meta-frame-key {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--color-post);
+	text-transform: uppercase;
+	margin-bottom: 2px;
+}
+
+.shape-pre {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	line-height: 1.55;
+	color: var(--text);
+	white-space: pre;
+	overflow-x: auto;
+}
+
+/* ── QUERY PARAMS (pills, deliberately not a code block) ── */
+.query-params-section {
+	margin-bottom: 10px;
+}
+
+.query-params-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding-top: 6px;
+}
+
+.query-param-pill {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 999px;
+	border: 0.1px dashed var(--border2);
+	background: var(--surface2);
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+}
+
+.query-param-pill--required {
+	border-style: solid;
+	border-color: var(--color-post);
+}
+
+.query-param-name {
+	color: var(--text);
+}
+
+.query-param-type {
+	color: var(--text2);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
