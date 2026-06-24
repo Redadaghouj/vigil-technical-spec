@@ -51,29 +51,40 @@ export default function PagesGroupSection({
 		collapseMatching(belongsToGroup);
 	}
 
-	// See GroupSection.jsx for why this is a whitelist (legend + bare
-	// fieldset only) rather than a blacklist on `.collapsible` — nested
-	// page cards have their own headers that live outside their own
-	// `.collapsible`, and a blacklist would let those wrongly bubble into
-	// a group toggle.
+	// See GroupSection.jsx for why this is a whitelist (legend, wrapper
+	// padding, or bare fieldset only) rather than a blacklist on
+	// `.collapsible` — nested page cards have their own headers that live
+	// outside their own `.collapsible`, and a blacklist would let those
+	// wrongly bubble into a group toggle.
 	function handleFieldsetClick(e)
 	{
 		if (e.target.closest(".group-hd-collapse-btn")) return;
-		if (e.target === e.currentTarget || e.target.closest(".group-hd")) {
+		if (
+			e.target === e.currentTarget ||
+			e.target.classList.contains("group-section") ||
+			e.target.closest(".group-hd")
+		)
+		{
+			// When collapsing the group, also collapse all open sections
+			// inside it — same action as the "Collapse all" button — so
+			// re-opening the group starts clean rather than restoring
+			// whatever was left expanded before.
+			if (!isCollapsed) handleCollapseAll();
 			toggleGroup(group);
 		}
 	}
 
 	return (
-		<fieldset ref={ref} className="group-section" onClick={handleFieldsetClick}>
-			<GroupHeader
-				label={group}
-				count={pages.length}
-				collapsed={isCollapsed}
-				onCollapseAll={handleCollapseAll}
-				collapseAllActive={!isCollapsed && openCount >= 2}
-			/>
-			{!isCollapsed &&
+		<div className="group-section-wrap" onClick={handleFieldsetClick}>
+			<fieldset ref={ref} className="group-section">
+				<GroupHeader
+					label={group}
+					count={pages.length}
+					collapsed={isCollapsed}
+					onCollapseAll={handleCollapseAll}
+					collapseAllActive={!isCollapsed && openCount >= 2}
+				/>
+				{!isCollapsed &&
 				pages.map((page) =>
 				{
 					const isPageOpen = open === page.id;
@@ -92,6 +103,7 @@ export default function PagesGroupSection({
 						/>
 					);
 				})}
-		</fieldset>
+			</fieldset>
+		</div>
 	);
 }

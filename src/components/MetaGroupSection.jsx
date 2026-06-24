@@ -24,42 +24,50 @@ export default function MetaGroupSection({
 	const ref = useBorderSpotlight(!isOpen);
 	const subGroups = groupBy(eps);
 
-	// Whitelist: legend (header) or the bare fieldset (border) only — see
-	// GroupSection.jsx for why a blacklist on `.collapsible` isn't safe
-	// here (nested GroupSections have their own headers outside their own
-	// `.collapsible`, which would otherwise wrongly bubble into a toggle).
+	// Whitelist: legend (header), the wrapper's own padding, or the bare
+	// fieldset (border) only — see GroupSection.jsx for why a blacklist on
+	// `.collapsible` isn't safe here (nested GroupSections have their own
+	// headers outside their own `.collapsible`, which would otherwise
+	// wrongly bubble into a toggle).
 	function handleFieldsetClick(e)
 	{
-		if (e.target === e.currentTarget || e.target.closest(".meta-group-hd")) {
+		if (
+			e.target === e.currentTarget ||
+			e.target.classList.contains("meta-group") ||
+			e.target.closest(".meta-group-hd")
+		)
+		{
 			onToggle();
 		}
 	}
 
 	return (
-		<fieldset ref={ref} className="meta-group" onClick={handleFieldsetClick}>
-			<MetaGroupHeader
-				label={meta}
-				count={eps.length}
-				collapsed={!isOpen}
-			/>
-			<div className={"collapsible" + (isOpen ? " collapsible--open" : "")}>
-				<div className="collapsible-inner">
-					{[...subGroups].map(([group, groupEps]) => (
-						<GroupSection
-							key={group}
-							group={group}
-							groupEps={groupEps}
-							openGroups={openGroups}
-							toggleGroup={toggleGroup}
-							isOpenState={isOpenState}
-							toggleOpenState={toggleOpenState}
-							openKeys={openKeys}
-							collapseMatching={collapseMatching}
-							highlightId={highlightId}
-						/>
-					))}
+		<div className="meta-group-wrap" onClick={handleFieldsetClick}>
+			<fieldset ref={ref} className="meta-group">
+				<MetaGroupHeader
+					label={meta}
+					count={eps.length}
+					collapsed={!isOpen}
+				/>
+				<div className={"collapsible" + (isOpen ? " collapsible--open" : "")}>
+					<div className="collapsible-inner">
+						{[...subGroups].map(([group, groupEps]) => (
+							<GroupSection
+								key={group}
+								group={group}
+								groupEps={groupEps}
+								openGroups={openGroups}
+								toggleGroup={toggleGroup}
+								isOpenState={isOpenState}
+								toggleOpenState={toggleOpenState}
+								openKeys={openKeys}
+								collapseMatching={collapseMatching}
+								highlightId={highlightId}
+							/>
+						))}
+					</div>
 				</div>
-			</div>
-		</fieldset>
+			</fieldset>
+		</div>
 	);
 }

@@ -1,9 +1,10 @@
 /**
  * MetaGroupHeader displays a collapsible meta group header for visibility sections.
  *
- * No onClick here — the containing fieldset (see MetaGroupSection) owns a
- * single click handler covering this legend AND the synthetic spotlight
- * border, the same pattern used by GroupHeader/GroupSection.
+ * No onClick here — the containing wrapper div (see MetaGroupSection) owns a
+ * single click handler covering this legend, the wrapper's own padding, AND
+ * the synthetic spotlight border, the same pattern used by
+ * GroupHeader/GroupSection.
  */
 
 export default function MetaGroupHeader({

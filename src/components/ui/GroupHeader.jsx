@@ -9,14 +9,14 @@
  * see the `:disabled` rule in App.css.
  *
  * Note: this component carries no click-to-toggle handlers of its own. The
- * containing <fieldset> (see GroupSection / PagesGroupSection) owns a single
- * click handler — a WHITELIST that fires only for clicks on the legend
- * (header) or directly on the bare fieldset (the synthetic spotlight border
- * is a pointer-events:none clone, so clicks there fall through to the real
- * fieldset underneath), explicitly excluding `.group-hd-collapse-btn` (this
- * button). That covers the label, the toggle arrow, AND the border with one
- * source of truth — instead of three separate handlers that could drift out
- * of sync.
+ * containing wrapper div (see GroupSection / PagesGroupSection) owns a
+ * single click handler — a WHITELIST that fires only for clicks on the
+ * legend (header), the wrapper's own padding, or directly on the bare
+ * fieldset (the synthetic spotlight border is a pointer-events:none clone,
+ * so clicks there fall through to the real fieldset underneath), explicitly
+ * excluding `.group-hd-collapse-btn` (this button). That covers the label,
+ * the toggle arrow, AND the border with one source of truth — instead of
+ * three separate handlers that could drift out of sync.
  */
 export default function GroupHeader({
 	label,

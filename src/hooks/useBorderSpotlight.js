@@ -11,8 +11,14 @@ import { useEffect, useState, useCallback, useRef } from "react";
  * Uses parent-relative coords as single source of truth so the border glow
  * and legend overlay stay in perfect sync.
  *
+ * The returned ref MUST go on the `<fieldset>` itself, not its wrapper div
+ * — the wrapper is used as the positioning/coordinate context (`element.
+ * parentElement`) and as the element hover is actually listened on, so
+ * putting the ref there instead would shift that context up one level and
+ * break every position calculation in this hook.
+ *
  * @param {boolean} collapsed - Whether the fieldset is collapsed
- * @returns {Function} Callback ref to be used as a ref
+ * @returns {Function} Callback ref to be used as a ref — attach to the fieldset
  */
 export default function useBorderSpotlight(collapsed = false)
 {
@@ -37,6 +43,16 @@ export default function useBorderSpotlight(collapsed = false)
 	const isHoveringRef = useRef(false);
 	const lastMouseRef = useRef({ x: 0, y: 0 });
 
+	// When we're in the middle of collapsing the group, the CSS transition
+	// on the real collapse-all button (max-width 140px → 0) hasn't started
+	// yet on the first frame after React sets `disabled`. Reading
+	// getBoundingClientRect() there returns the stale pre-transition width,
+	// so the overlay button stays full-width for one frame and appears as a
+	// strikethrough. Setting this ref to `true` tells syncCollapseBtnDimensions
+	// to skip the layout read entirely and zero the overlay button directly,
+	// eliminating the flash. Cleared once the transition window elapses.
+	const collapsingBtnRef = useRef(false);
+
 	// Lets the small `[collapsed]` effect below reach into whatever
 	// start/stop/apply functions the big setup effect most recently
 	// created, without needing the setup effect itself to depend on
@@ -56,6 +72,8 @@ export default function useBorderSpotlight(collapsed = false)
 	   hide: () =>
 		{},
 	   setBorderShape: () =>
+		{},
+	   syncCollapseBtn: () =>
 		{}
 	});
 
@@ -85,7 +103,20 @@ export default function useBorderSpotlight(collapsed = false)
 			{
 				const { x, y } = lastMouseRef.current;
 				controlsRef.current.applySpotlight(x, y);
+
+				// Set the collapsing flag BEFORE show() so that any
+				// syncCollapseBtn call — including the one triggered by the
+				// MutationObserver's innerHTML rebuild when React sets
+				// `disabled` — immediately zeros the overlay button rather
+				// than reading the stale pre-transition layout width.
+				// Clear the flag after 200ms (the CSS transition is 150ms).
+				collapsingBtnRef.current = true;
+				controlsRef.current.syncCollapseBtn();
 				controlsRef.current.show();
+				setTimeout(() =>
+				{
+					collapsingBtnRef.current = false;
+				}, 200);
 			}
 			else
 			{
@@ -197,21 +228,19 @@ export default function useBorderSpotlight(collapsed = false)
 				node.style.color = "var(--border, #fff)";
 			});
 
-			// The collapse-all button is the only piece of the header with
-			// its own CSS transition (it eases its width/opacity in and out
-			// over 150ms — see .group-hd-collapse-btn in App.css). This
-			// overlay is a clone re-synced via innerHTML further down, so
-			// it never sees that transition play out — a freshly-created
-			// node just renders at its immediate final size. Left visible,
-			// it'd flash to its end state instantly while the real button
-			// underneath is still easing toward it, a "ghost" of the
-			// button's final size sitting inside the glow mask. Hiding it
-			// (not display:none, so the overlay's own width still matches
-			// the original's) sidesteps that mismatch entirely — the glow
-			// effect was never meant to apply to this button anyway.
+			// The collapse-all button has CSS transitions (max-width,
+			// padding, opacity — see .group-hd-collapse-btn in App.css).
+			// Fresh cloned nodes don't replay those transitions; they snap
+			// to their final state instantly. Rather than hiding the button
+			// (which removed it from the spotlight entirely), we disable
+			// transitions on the overlay copy and synchronize its exact
+			// rendered dimensions from the real button every animation
+			// frame (see syncCollapseBtnDimensions below). That way the
+			// overlay button always mirrors the real one — mid-transition
+			// included — so it correctly receives the spotlight glow.
 			legendOverlay.querySelectorAll(".group-hd-collapse-btn").forEach((btn) =>
 			{
-				btn.style.visibility = "hidden";
+				btn.style.transition = "none";
 			});
 
 			parent.appendChild(legendOverlay);
@@ -227,8 +256,57 @@ export default function useBorderSpotlight(collapsed = false)
 		// content into the overlay any time the real legend mutates.
 		let legendContentObserver = null;
 
+		// Declared here (outside the originalLegend guard) so animate() —
+		// which is also defined outside that block — can call it without a
+		// ReferenceError. Assigned to a real implementation below if there
+		// is a legend; otherwise stays a no-op so the rAF loop is safe.
+		let syncCollapseBtnDimensions = () =>
+		{};
+
 		if (originalLegend && legendOverlay)
 		{
+			const realCollapseBtn = originalLegend.querySelector(".group-hd-collapse-btn");
+
+			// Syncs the overlay's collapse-all button to match the REAL
+			// button's exact current rendered dimensions (width, padding,
+			// margin, opacity) — read via getBoundingClientRect /
+			// getComputedStyle so they reflect mid-transition values. Called
+			// from syncLegendContent (so a fresh innerHTML clone is
+			// immediately corrected) and from every animate() frame (so the
+			// button tracks the real one throughout a transition).
+			syncCollapseBtnDimensions = () =>
+			{
+				if (!realCollapseBtn) return;
+				const overlayBtn = legendOverlay.querySelector(".group-hd-collapse-btn");
+				if (!overlayBtn) return;
+
+				overlayBtn.style.transition = "none";
+				overlayBtn.style.maxWidth   = "none";
+
+				// If we're mid-collapse we already KNOW the button should be
+				// invisible — don't read getBoundingClientRect() because the
+				// CSS transition may not have started yet and we'd get the
+				// stale pre-transition width, which draws as a strikethrough.
+				// Zero everything directly and bail early instead.
+				if (collapsingBtnRef.current)
+				{
+					overlayBtn.style.width        = "0px";
+					overlayBtn.style.paddingLeft  = "0px";
+					overlayBtn.style.paddingRight = "0px";
+					overlayBtn.style.opacity      = "0";
+					return;
+				}
+
+				const cs = window.getComputedStyle(realCollapseBtn);
+				overlayBtn.style.width            = realCollapseBtn.getBoundingClientRect().width + "px";
+				overlayBtn.style.paddingLeft      = cs.paddingLeft;
+				overlayBtn.style.paddingRight     = cs.paddingRight;
+				overlayBtn.style.borderLeftWidth  = cs.borderLeftWidth;
+				overlayBtn.style.borderRightWidth = cs.borderRightWidth;
+				overlayBtn.style.marginLeft       = cs.marginLeft;
+				overlayBtn.style.opacity          = cs.opacity;
+			};
+
 			const syncLegendContent = () =>
 			{
 				legendOverlay.innerHTML = originalLegend.innerHTML;
@@ -238,8 +316,11 @@ export default function useBorderSpotlight(collapsed = false)
 				});
 				legendOverlay.querySelectorAll(".group-hd-collapse-btn").forEach((btn) =>
 				{
-					btn.style.visibility = "hidden";
+					btn.style.transition = "none";
 				});
+				// Immediately snap the overlay btn to the real btn's current
+				// rendered size (post-innerHTML rebuild the reference is fresh).
+				syncCollapseBtnDimensions();
 
 				// Same resync, but for the clone's own legend — this is the
 				// one that actually drives the native border-skip gap, so
@@ -446,6 +527,11 @@ export default function useBorderSpotlight(collapsed = false)
 					legendOverlay.style.maskImage = lm;
 				}
 
+				// Sync collapse-all button dimensions every frame so the
+				// overlay button tracks the real button's CSS transitions
+				// (max-width, padding, opacity) without ghosting.
+				syncCollapseBtnDimensions();
+
 				animationFrameId = requestAnimationFrame(animate);
 			};
 
@@ -492,7 +578,8 @@ export default function useBorderSpotlight(collapsed = false)
 		   startFromCursor: startTravelFromCursor,
 		   show,
 		   hide,
-		   setBorderShape
+		   setBorderShape,
+		   syncCollapseBtn: syncCollapseBtnDimensions
 		};
 
 		// Expanded mode is hover-independent: if a group mounts already
@@ -516,6 +603,10 @@ export default function useBorderSpotlight(collapsed = false)
 			if (collapsedRef.current)
 			{
 				applySpotlight(px, py);
+				// Collapsed mode has no rAF loop, so sync the collapse btn
+				// dimensions here instead (handles the show/hide transition
+				// while the group is collapsed and the cursor is over it).
+				syncCollapseBtnDimensions();
 			}
 		};
 
@@ -545,16 +636,25 @@ export default function useBorderSpotlight(collapsed = false)
 			}
 		};
 
-		element.addEventListener("mouseenter", handleMouseEnter);
-		element.addEventListener("mousemove", handleMouseMove);
-		element.addEventListener("mouseleave", handleMouseLeave);
+		// Listen on `parent` (the `.group-section-wrap` / `.meta-group-wrap`
+		// div), not `element` (the fieldset) — the wrapper now owns the
+		// click handler and the padding that used to live on the fieldset,
+		// so hovering that padding should trigger the spotlight too. `ref`
+		// itself stays on the fieldset (moving it would make `parent` the
+		// wrapper's OWN parent instead, breaking every position calculation
+		// above), only the listeners move up one level. All coordinates
+		// passed to applySpotlight/handleMouseMove are already parent-
+		// relative, so nothing else needs to change.
+		parent.addEventListener("mouseenter", handleMouseEnter);
+		parent.addEventListener("mousemove", handleMouseMove);
+		parent.addEventListener("mouseleave", handleMouseLeave);
 
 		return () =>
 		{
 			stopTravelAnimation();
-			element.removeEventListener("mouseenter", handleMouseEnter);
-			element.removeEventListener("mousemove", handleMouseMove);
-			element.removeEventListener("mouseleave", handleMouseLeave);
+			parent.removeEventListener("mouseenter", handleMouseEnter);
+			parent.removeEventListener("mousemove", handleMouseMove);
+			parent.removeEventListener("mouseleave", handleMouseLeave);
 			resizeObserver.disconnect();
 			legendContentObserver?.disconnect();
 			if (clone.parentNode) clone.parentNode.removeChild(clone);
@@ -574,6 +674,8 @@ export default function useBorderSpotlight(collapsed = false)
 			   hide: () =>
 				{},
 			   setBorderShape: () =>
+				{},
+			   syncCollapseBtn: () =>
 				{}
 			};
 		};

@@ -42,15 +42,19 @@ body {
 
 *::-webkit-scrollbar-track {
 	background: transparent;
+	border: 0px solid transparent;
+	border-radius: 0 !important;
+	box-shadow: none;
 }
 
 *::-webkit-scrollbar-thumb {
 	background: #fff;
-	border-radius: 0;
+	border-radius: 0 !important;
 }
 
 *::-webkit-scrollbar-thumb:hover {
 	background: #fff;
+	border-radius: 0 !important;
 }
 
 * {
@@ -113,6 +117,7 @@ body {
 	font-weight: 500;
 	color: var(--text2);
 	padding: 10px 0 9px;
+	cursor: pointer;
 	position: relative;
 	transition: color 0.15s;
 	text-transform: uppercase;
@@ -180,6 +185,7 @@ body {
 	align-items: center;
 	justify-content: space-between;
 	user-select: none;
+	cursor: pointer;
 	border-bottom: 0.1px solid var(--border);
 	transition: border-color 0.1s;
 }
@@ -200,6 +206,7 @@ body {
 	padding: 9px 14px 9px 20px;
 	border-bottom: 0.1px solid var(--border);
 	position: relative;
+	cursor: pointer;
 	transition: border-color 0.1s;
 }
 
@@ -245,20 +252,31 @@ body {
 }
 
 /* ── MAIN GROUPS ── */
+
+.group-section-wrap {
+	cursor: pointer;
+}
+
+.group-section-wrap + .group-section-wrap {
+	padding-top: 24px;
+}
+
 .group-section {
-	border: 1px solid transparent;
+	border: none;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid transparent;
 	border-radius: 8px;
-	padding: 8px;
+	padding-bottom: 20px;
 	background: transparent;
-	margin-top: 20px;
+	cursor: pointer;
 }
 
 .group-hd {
 	color: var(--text);
 	border: 1px solid transparent;
 	border-radius: 8px;
-	padding: 14px 18px;
-	margin-bottom: 28px;
+	padding: 14px 10px;
+	margin-left: 24px;
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -300,13 +318,11 @@ body {
 .group-hd-collapse-btn {
 	display: flex;
 	align-items: center;
-	margin-left: 8px;
-	padding: 6px 14px;
+	padding: 2px 9px;
 	max-width: 140px;
 	overflow: hidden;
 	background: none;
 	border: 1px solid var(--border2);
-	border-radius: 5px;
 	font-family: var(--font-mono);
 	font-size: 10px;
 	font-weight: 600;
@@ -365,6 +381,14 @@ body {
 	background-color: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
+.meta-group-wrap {
+	cursor: pointer;
+}
+
+.meta-group-wrap + .meta-group-wrap {
+	padding-top: 24px;
+}
+
 .meta-group-toggle {
 	font-size: 12px;
 	color: var(--text2);
@@ -374,11 +398,11 @@ body {
 }
 
 .meta-group {
-	border: 1px solid transparent;
+	outline: 1px solid transparent;
+	border: none;
 	border-radius: 8px;
-	padding: 8px;
-	margin-bottom: 36px;
 	background: transparent;
+	cursor: pointer;
 }
 
 .meta-group-hd {
@@ -391,6 +415,7 @@ body {
 	user-select: none;
 	transition: border-color 0.1s;
 	padding-right: 10px;
+	margin-left: 8px;
 }
 
 .meta-group-label-wrap {
@@ -418,7 +443,7 @@ body {
 /* ── ENDPOINT CARD ── */
 .ep-card {
 	overflow: hidden;
-	margin-bottom: 12px;
+	padding: 12px;
 	transition: border-color 0.15s;
 	background: transparent;
 }
@@ -431,8 +456,10 @@ body {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	padding: 14px 16px;
+	padding: 0 16px;
+	margin-bottom: 8px;
 	user-select: none;
+	cursor: pointer;
 }
 
 .ep-route {
@@ -507,6 +534,11 @@ body {
 	gap: 6px;
 }
 
+.ep-section-head.used-by-head {
+	cursor: pointer;
+	user-select: none;
+}
+
 .ep-section-head::after {
 	content: "";
 	flex: 1;
@@ -567,7 +599,7 @@ body {
 /* ── PAGE CARD ── */
 .page-card {
 	overflow: hidden;
-	margin-bottom: 12px;
+	padding-bottom: 12px;
 	transition: border-color 0.15s;
 	background: transparent;
 }
@@ -578,6 +610,7 @@ body {
 	gap: 12px;
 	padding: 14px 16px;
 	user-select: none;
+	cursor: pointer;
 }
 
 .page-name {
@@ -1029,6 +1062,7 @@ body {
 	color: var(--text2);
 	border-bottom: 0.1px solid var(--border);
 	user-select: none;
+	cursor: pointer;
 	transition: border-color 0.1s;
 }
 
@@ -1112,6 +1146,11 @@ body {
 	transition:
 		max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1),
 		opacity 0.35s ease 0.06s;
+}
+
+.collapsible-inner > *:last-child,
+.group-hd {
+	margin-bottom: 20px;
 }
 
 /* ── AUTH STRATEGY PILLS ── */
