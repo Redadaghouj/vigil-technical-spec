@@ -97,6 +97,11 @@ function buildClone(wrap)
 	const clone = wrap.cloneNode(true);
 	clone.removeAttribute("style");
 	clone.setAttribute("style", "all: unset; display: contents;");
+	// `host` (the spotlight overlay) now lives inside `wrap`, so a deep
+	// clone of `wrap` would otherwise include a clone of `host` itself —
+	// recursing further on every subsequent rebuild. Strip it out.
+	const hostInClone = clone.querySelector("[data-spotlight-host]");
+	if (hostInClone) hostInClone.remove();
 	sanitizeClone(clone);
 	return clone;
 }
@@ -132,59 +137,36 @@ export default function useMaskSpotlight(isExpanded = false)
 		{
 			if (teardownActive) return;
 
-			const parent = wrap.parentElement;
-			if (!parent) return;
-
 			const wrapPosition = getComputedStyle(wrap).position;
 			if (wrapPosition === "static") wrap.style.position = "relative";
 
-			const parentPosition = getComputedStyle(parent).position;
-			if (parentPosition === "static") parent.style.position = "relative";
-
+			// `host` is appended directly inside `wrap` and filled with
+			// inset: 0, so it always exactly matches wrap's box with no
+			// cross-element math. Previously `host` was appended to
+			// `wrap.parentElement` and positioned via
+			// `wrap.getBoundingClientRect()` diffed against
+			// `parent.getBoundingClientRect()`. That diff is sound in
+			// general, but in Pages view `parent` is the group-section
+			// <fieldset>, and appending a new child to a <fieldset>
+			// invalidates and regenerates the UA-internal anonymous box
+			// fieldsets use to carve out room for the <legend> — which
+			// happens synchronously on the same appendChild call that adds
+			// `host` itself. The fieldset's getBoundingClientRect() read
+			// immediately after that append doesn't yet reflect the same
+			// reference frame `wrap` (laid out earlier, unaffected by the
+			// fieldset's box regeneration) is measured in, so the left/top
+			// diff comes out wrong by roughly one row's worth of layout —
+			// reproducibly, on the very first hover, regardless of any
+			// other card's state. Anchoring `host` to `wrap` itself sidesteps
+			// the fieldset entirely: no parent rect, no diffing, nothing
+			// that can disagree.
 			const host = document.createElement("div");
+			host.setAttribute("data-spotlight-host", "");
 			host.setAttribute(
 				"style",
-				`position: absolute; left: ${wrap.offsetLeft}px; top: ${wrap.offsetTop}px; ` +
-				`width: ${wrap.offsetWidth}px; height: ${wrap.offsetHeight}px; pointer-events: none;`,
+				"position: absolute; inset: 0; pointer-events: none;",
 			);
-			parent.appendChild(host);
-
-			function syncHostRect()
-			{
-				host.style.left = wrap.offsetLeft + "px";
-				host.style.top = wrap.offsetTop + "px";
-				host.style.width = wrap.offsetWidth + "px";
-				host.style.height = wrap.offsetHeight + "px";
-				alignClone();
-			}
-
-			// ResizeObserver only fires when an *observed element's own
-			// box* changes size. That's the wrong signal here: wrap's
-			// offsetTop can drift because of a sibling resizing two or
-			// three ancestors up (e.g. "Used by pages" shifting when an
-			// earlier PayloadSection in the same EndpointCard expands),
-			// and which ancestor that is varies by call site — there's no
-			// single fixed element to observe. Worse, `html`/`body`/`#root`
-			// are pinned to height: 100% in this app, so they never resize
-			// at all even though their content scrolls internally; a
-			// ResizeObserver on body would just never fire.
-			//
-			// Instead, resync every frame for as long as the card is
-			// actively hovered. This only runs between mouseenter and
-			// mouseleave (cancelled in teardown below), so it's one
-			// rAF loop for the duration of a single hover, not a standing
-			// cost — and it's correct regardless of what caused the drift.
-			let rafId = requestAnimationFrame(function tick()
-			{
-				syncHostRect();
-				rafId = requestAnimationFrame(tick);
-			});
-
-			// Still watch wrap directly too, so the very first paint after
-			// activation (before the next rAF tick) and any size-only
-			// change land immediately rather than waiting up to one frame.
-			const resizeObserver = new ResizeObserver(syncHostRect);
-			resizeObserver.observe(wrap);
+			wrap.appendChild(host);
 
 			const border = document.createElement("div");
 			border.setAttribute("style", spotlightStyle);
@@ -192,9 +174,10 @@ export default function useMaskSpotlight(isExpanded = false)
 
 			// Clone wrap's own content so background-clip:text has glyphs
 			// in this overlay to clip against (an empty div has no text to
-			// clip to). `host` lives outside `wrap` entirely (a sibling in
-			// `parent`, not a child of `wrap`), so rebuilding it below
-			// never re-fires the MutationObserver watching `wrap`.
+			// clip to). `host` lives inside `wrap` now (filled via
+			// inset: 0, see activate() above), so buildClone() strips it
+			// back out of the clone — see the data-spotlight-host check
+			// there — to avoid cloning the overlay into itself.
 			const glowWrap = document.createElement("div");
 			glowWrap.setAttribute("style", glowWrapStyle);
 			glowWrap.setAttribute("aria-hidden", "true");
@@ -276,8 +259,18 @@ export default function useMaskSpotlight(isExpanded = false)
 			wrap.addEventListener("mousemove", onMouseMove);
 
 			let pending = null;
-			const observer = new MutationObserver(() =>
+			const observer = new MutationObserver((mutations) =>
 			{
+				// `host` now lives inside `wrap` (so it can fill it with
+				// inset: 0), which means this observer — watching wrap's
+				// subtree for real content changes to re-clone — would
+				// otherwise also catch host's own children being rebuilt
+				// below (border, glowWrap, glowInner) and re-trigger itself.
+				// Skip any mutation whose target is inside host; those are
+				// our own writes, not real content changes in wrap.
+				const isReal = mutations.some((m) => !host.contains(m.target));
+				if (!isReal) return;
+
 				if (pending) return;
 				pending = requestAnimationFrame(() =>
 				{
@@ -296,8 +289,6 @@ export default function useMaskSpotlight(isExpanded = false)
 			{
 				wrap.removeEventListener("mousemove", onMouseMove);
 				observer.disconnect();
-				resizeObserver.disconnect();
-				cancelAnimationFrame(rafId);
 				if (pending) cancelAnimationFrame(pending);
 				host.remove();
 				teardownActive = null;

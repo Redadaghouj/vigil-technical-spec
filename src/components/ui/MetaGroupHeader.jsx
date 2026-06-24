@@ -1,16 +1,19 @@
 /**
  * MetaGroupHeader displays a collapsible meta group header for visibility sections.
+ *
+ * No onClick here — the containing fieldset (see MetaGroupSection) owns a
+ * single click handler covering this legend AND the synthetic spotlight
+ * border, the same pattern used by GroupHeader/GroupSection.
  */
 
 export default function MetaGroupHeader({
 	label,
 	count,
-	collapsed,
-	onToggle
+	collapsed
 })
 {
 	return (
-		<legend className={"meta-group-hd meta-group-hd--" + label.toLowerCase()} onClick={onToggle}>
+		<legend className={"meta-group-hd meta-group-hd--" + label.toLowerCase()}>
 			<span className={label.toLowerCase()} />
 			<span className="meta-group-label-wrap">
 				<span className="meta-group-label">{label}</span>

@@ -1,10 +1,18 @@
+import { useMemo } from "react";
 import useBorderSpotlight from "../hooks/useBorderSpotlight.js";
 import GroupHeader from "./ui/GroupHeader.jsx";
 import { PageCard } from "./EndpointComponents.jsx";
 
 /**
- * PagesGroupSection - A group section with border spotlight for pages view
- * The ref is applied directly to the fieldset for the spotlight effect
+ * PagesGroupSection - A group section with border spotlight for pages view.
+ *
+ * Collapse-all button: clears the single-select `open` page if it belongs
+ * to this group, then calls collapseMatching to wipe every open registry
+ * key that contains any of this group's page ids — endpoints, payloads,
+ * used-by sections, and nested page cards all collapse in one go. Only
+ * shown once at least 2 collapsibles (the open page plus registry keys)
+ * are actually expanded — with 0 or 1 there's nothing meaningful to
+ * collapse "all" of.
  */
 export default function PagesGroupSection({
 	group,
@@ -13,21 +21,57 @@ export default function PagesGroupSection({
 	toggleGroup,
 	open,
 	setOpen,
-	expandedEps,
-	setExpandedEps,
+	isOpenState,
+	toggleOpenState,
+	openKeys,
+	collapseMatching,
 	highlightEndpointId,
 })
 {
 	const isCollapsed = !openGroups.has(group);
 	const ref = useBorderSpotlight(isCollapsed);
 
+	// A key "belongs to this group" if it contains any page id from this group.
+	// Because all registry keys start with or include the originating page id,
+	// this catches endpoint cards, payload sections, usedby toggles, and nested
+	// used-by page cards at any depth.
+	const pageIds = pages.map((p) => p.id);
+	const belongsToGroup = (key) => pageIds.some((id) => key.includes(id));
+
+	const openCount = useMemo(
+		() =>
+			(pageIds.includes(open) ? 1 : 0) +
+			[...openKeys].filter(belongsToGroup).length,
+		[openKeys, open, pages],
+	);
+
+	function handleCollapseAll()
+	{
+		if (pageIds.includes(open)) setOpen(null);
+		collapseMatching(belongsToGroup);
+	}
+
+	// See GroupSection.jsx for why this is a whitelist (legend + bare
+	// fieldset only) rather than a blacklist on `.collapsible` — nested
+	// page cards have their own headers that live outside their own
+	// `.collapsible`, and a blacklist would let those wrongly bubble into
+	// a group toggle.
+	function handleFieldsetClick(e)
+	{
+		if (e.target.closest(".group-hd-collapse-btn")) return;
+		if (e.target === e.currentTarget || e.target.closest(".group-hd")) {
+			toggleGroup(group);
+		}
+	}
+
 	return (
-		<fieldset ref={ref} className="group-section">
+		<fieldset ref={ref} className="group-section" onClick={handleFieldsetClick}>
 			<GroupHeader
 				label={group}
 				count={pages.length}
 				collapsed={isCollapsed}
-				onToggle={() => toggleGroup(group)}
+				onCollapseAll={handleCollapseAll}
+				collapseAllActive={!isCollapsed && openCount >= 2}
 			/>
 			{!isCollapsed &&
 				pages.map((page) =>
@@ -39,11 +83,12 @@ export default function PagesGroupSection({
 							page={page}
 							isOpen={isPageOpen}
 							onToggle={() => setOpen(isPageOpen ? null : page.id)}
-							expandedEps={expandedEps}
-							onToggleEp={(key) =>
-								setExpandedEps((e) => ({ ...e, [key]: !e[key] }))
-							}
+							keyPrefix={"page:" + page.id}
+							isOpenState={isOpenState}
+							toggleOpenState={toggleOpenState}
 							highlightEndpointId={highlightEndpointId}
+							openKeys={openKeys}
+							collapseMatching={collapseMatching}
 						/>
 					);
 				})}

@@ -213,15 +213,42 @@ function RequiredRoleRow({ ep })
 	);
 }
 
-function ConstraintSection({ ep, showUsedBy = true })
+// ConstraintSection receives isOpenState/toggleOpenState and a usedByKey
+// (built by the parent EndpointCard as openKey + ":usedby").
+// Keys used inside:
+//   usedBy toggle  : usedByKey
+//   nested PageCard: usedByKey + ":page:" + p.id  (also used as that card's keyPrefix)
+//
+// Collapse-all button: every key nested under this used-by section (the
+// toggle itself, nested page cards, and anything those page cards open in
+// turn) is built by string concatenation starting from usedByKey, so a
+// simple startsWith prefix match reaches all of them regardless of depth.
+// Only shown once the section is open AND at least 2 of those keys are
+// actually open — with 0 or 1 there's nothing meaningful to collapse "all" of.
+function ConstraintSection({
+	ep,
+	showUsedBy = true,
+	isOpenState,
+	toggleOpenState,
+	usedByKey,
+	openKeys,
+	collapseMatching
+})
 {
 	const { constraints } = ep;
 	const pages = PAGES.filter((p) => p.endpointIds.includes(ep.id));
-	const [openPages, setOpenPages] = useState({});
-	const [usedByOpen, setUsedByOpen] = useState(false);
-	const [expandedEps, setExpandedEps] = useState({});
 
+	const usedByOpen = isOpenState(usedByKey);
 	const usedByRef = useMaskSpotlight(usedByOpen);
+
+	const belongsToUsedBy = (key) => key.startsWith(usedByKey);
+	const usedByOpenCount = [...openKeys].filter(belongsToUsedBy).length;
+
+	function handleCollapseAllUsedBy(e)
+	{
+		e.stopPropagation();
+		collapseMatching(belongsToUsedBy);
+	}
 
 	const rows =
 	[
@@ -248,28 +275,39 @@ function ConstraintSection({ ep, showUsedBy = true })
 				<div ref={usedByRef} className="used-by-section spot">
 					<div
 						className="ep-section-head used-by-head"
-						onClick={() => setUsedByOpen((o) => !o)}
+						onClick={() => toggleOpenState(usedByKey)}
 					>
 						Used by pages ({pages.length})
-						<span
-							className="ep-toggle"
-							style={{ order: 2 }}
-						>{usedByOpen ? "−" : "+"}</span>
+						<button
+							type="button"
+							className="group-hd-collapse-btn ep-section-collapse-btn"
+							onClick={handleCollapseAllUsedBy}
+							disabled={!(usedByOpen && usedByOpenCount >= 2)}
+							title="Collapse all"
+						>
+							Collapse all
+						</button>
 					</div>
 					<div className={"collapsible" + (usedByOpen ? " collapsible--open" : "")}>
 						<div className="collapsible-inner used-by-section-body">
-							{pages.map((p) => (
-								<PageCard
-									key={p.id}
-									page={p}
-									isOpen={!!openPages[p.id]}
-									onToggle={() => setOpenPages((s) => ({ ...s, [p.id]: !s[p.id] }))}
-									expandedEps={expandedEps}
-									onToggleEp={(key) =>
-										setExpandedEps((s) => ({ ...s, [key]: !s[key] }))
-									}
-								/>
-							))}
+							{pages.map((p) =>
+							{
+								const pageKey = usedByKey + ":page:" + p.id;
+								return (
+									<PageCard
+										key={p.id}
+										page={p}
+										isOpen={isOpenState(pageKey)}
+										onToggle={() => toggleOpenState(pageKey)}
+										keyPrefix={pageKey}
+										isOpenState={isOpenState}
+										toggleOpenState={toggleOpenState}
+										excludeEpId={ep.id}
+										openKeys={openKeys}
+										collapseMatching={collapseMatching}
+									/>
+								);
+							})}
 						</div>
 					</div>
 				</div>
@@ -291,9 +329,11 @@ function ConstraintSection({ ep, showUsedBy = true })
 	);
 }
 
-function PayloadSection({ label, value })
+// PayloadSection uses the registry (openKey/isOpenState/toggleOpenState)
+// so a group-level "collapse all" can reach it without lifting state manually.
+function PayloadSection({ label, value, openKey, isOpenState, toggleOpenState })
 {
-	const [open, setOpen] = useState(false);
+	const open = isOpenState(openKey);
 	const ref = useMaskSpotlight(open);
 	const frameCount = typeof value === "string" ? 1 : Object.keys(value).length;
 
@@ -301,10 +341,9 @@ function PayloadSection({ label, value })
 		<div ref={ref} className="payload-section spot">
 			<div
 				className="ep-section-head payload-section-head"
-				onClick={() => setOpen((o) => !o)}
+				onClick={() => toggleOpenState(openKey)}
 			>
 				{label} ({frameCount})
-				<span className="ep-toggle" style={{ order: 2 }}>{open ? "−" : "+"}</span>
 			</div>
 			<div className={"collapsible" + (open ? " collapsible--open" : "")}>
 				<div className="collapsible-inner payload-section-body">
@@ -350,14 +389,23 @@ function QueryParamsSection({ params })
 	);
 }
 
+// EndpointCard uses the registry:
+//   openKey         - this card's own open/close key in the registry
+//   isOpenState     - registry isOpen function
+//   toggleOpenState - registry toggle function
+// Payload and usedBy child keys are derived from openKey at render time.
 function EndpointCard({
 	ep,
-	expanded,
-	onToggle,
+	openKey,
+	isOpenState,
+	toggleOpenState,
 	highlighted,
 	showUsedBy = true,
+	openKeys,
+	collapseMatching,
 })
 {
+	const expanded = isOpenState(openKey);
 	const ref = useMaskSpotlight(expanded);
 
 	return (
@@ -366,11 +414,10 @@ function EndpointCard({
 			id={ep.id}
 			className={"ep-card spot" + (highlighted ? " highlight-ring" : "")}
 		>
-			<div className="ep-card-header" onClick={onToggle}>
+			<div className="ep-card-header" onClick={() => toggleOpenState(openKey)}>
 				<Badge method={ep.method} />
 				<span className="ep-route">{ep.route}</span>
 				<VisibilityBadge internal={ep.internal} />
-				<span className="ep-toggle">{expanded ? "−" : "+"}</span>
 			</div>
 			<div className={"collapsible" + (expanded ? " collapsible--open" : "")}>
 				<div className="collapsible-inner ep-body">
@@ -405,37 +452,94 @@ function EndpointCard({
 						<RequiredRoleRow ep={ep} />
 					</div>
 					{ep.method === "WS"
-						? ep.request && <PayloadSection label="Request" value={ep.request} />
+						? ep.request && (
+							<PayloadSection
+								label="Request"
+								value={ep.request}
+								openKey={openKey + ":payload:Request"}
+								isOpenState={isOpenState}
+								toggleOpenState={toggleOpenState}
+							/>
+						)
 						: ep.request && (
 							<>
 								<QueryParamsSection params={ep.request.query} />
 								{ep.request.body && (
-									<PayloadSection label="Body" value={ep.request.body} />
+									<PayloadSection
+										label="Body"
+										value={ep.request.body}
+										openKey={openKey + ":payload:Body"}
+										isOpenState={isOpenState}
+										toggleOpenState={toggleOpenState}
+									/>
 								)}
 							</>
 						)}
 					{ep.response && (
-						<PayloadSection label="Response" value={ep.response} />
+						<PayloadSection
+							label="Response"
+							value={ep.response}
+							openKey={openKey + ":payload:Response"}
+							isOpenState={isOpenState}
+							toggleOpenState={toggleOpenState}
+						/>
 					)}
-					<ConstraintSection ep={ep} showUsedBy={showUsedBy} />
+					<ConstraintSection
+						ep={ep}
+						showUsedBy={showUsedBy}
+						isOpenState={isOpenState}
+						toggleOpenState={toggleOpenState}
+						usedByKey={openKey + ":usedby"}
+						openKeys={openKeys}
+						collapseMatching={collapseMatching}
+					/>
 				</div>
 			</div>
 		</div>
 	);
 }
 
+// PageCard receives keyPrefix to build unique keys for its EndpointCard children.
+// The card's own isOpen/onToggle are passed directly (single-select in top-level
+// Pages view, or registry-backed in nested used-by contexts).
+//
+// Collapse-all button (Endpoints used): every key any of this page's
+// EndpointCards can open (the card itself, its payload sections, its own
+// nested used-by) is built starting with keyPrefix + ":ep:" + ep.id, so a
+// startsWith prefix match on keyPrefix + ":ep:" reaches all of them. No
+// "section open" gate needed here (unlike the used-by case) — this list is
+// only ever rendered while the page card itself is already open. Only
+// shown once at least 2 of those keys are open.
 function PageCard({
 	page,
 	isOpen,
 	onToggle,
-	expandedEps,
-	onToggleEp,
+	keyPrefix,
+	isOpenState,
+	toggleOpenState,
 	highlightEndpointId,
+	excludeEpId,
+	openKeys,
+	collapseMatching,
 })
 {
-	const eps = ENDPOINTS.filter((e) => page.endpointIds.includes(e.id));
+	const eps = ENDPOINTS.filter(
+		(e) => page.endpointIds.includes(e.id) && e.id !== excludeEpId,
+	);
 	const roles = page.role.split(" + ");
 	const ref = useMaskSpotlight(isOpen);
+
+	const epsPrefix = keyPrefix + ":ep:";
+	const belongsToEps = (key) => key.startsWith(epsPrefix);
+	const epsOpenCount = openKeys
+		? [...openKeys].filter(belongsToEps).length
+		: 0;
+
+	function handleCollapseAllEps(e)
+	{
+		e.stopPropagation();
+		collapseMatching(belongsToEps);
+	}
 
 	return (
 		<div ref={ref} className={"page-card spot" + (isOpen ? " page-card--open" : "")}>
@@ -445,7 +549,6 @@ function PageCard({
 					<span className="page-path">{page.path}</span>
 				</div>
 				<span className="text-mono-small">{eps.length} ep</span>
-				<span className="ep-toggle">{isOpen ? "−" : "+"}</span>
 			</div>
 			<div className={"collapsible" + (isOpen ? " collapsible--open" : "")}>
 				<div className="collapsible-inner page-body">
@@ -456,22 +559,40 @@ function PageCard({
 					</div>
 					<p className="page-desc">{page.desc}</p>
 					{eps.length === 0 ? (
-						<div className="static-page-msg">Static page - no API endpoints.</div>
+						<div className="static-page-msg">
+							{excludeEpId
+								? "No other endpoints used."
+								: "Static page - no API endpoints."}
+						</div>
 					) : (
 						<div>
-							<div className="ep-section-head">Endpoints used</div>
+							<div className="ep-section-head">
+								{excludeEpId ? "Other endpoints used" : "Endpoints used"}
+								<button
+									type="button"
+									className="group-hd-collapse-btn ep-section-collapse-btn"
+									onClick={handleCollapseAllEps}
+									disabled={epsOpenCount < 2}
+									title="Collapse all"
+								>
+									Collapse all
+								</button>
+							</div>
 							{eps.map((ep) =>
 							{
-								const key = page.id + ep.id;
+								const epKey = keyPrefix + ":ep:" + ep.id;
 								const isHighlighted = highlightEndpointId === ep.id;
 								return (
 									<EndpointCard
 										key={ep.id}
 										ep={ep}
-										expanded={!!expandedEps?.[key] || isHighlighted}
-										onToggle={() => onToggleEp?.(key)}
+										openKey={epKey}
+										isOpenState={isOpenState}
+										toggleOpenState={toggleOpenState}
 										highlighted={isHighlighted}
 										showUsedBy={false}
+										openKeys={openKeys}
+										collapseMatching={collapseMatching}
 									/>
 								);
 							})}

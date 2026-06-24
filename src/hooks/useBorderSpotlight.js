@@ -155,6 +155,17 @@ export default function useBorderSpotlight(collapsed = false)
 			node.style.visibility = "hidden";
 		});
 
+		// Kept so syncLegendContent (below) can resync this too. The browser
+		// computes the native fieldset border-skip gap from THIS legend's
+		// own rendered width — not the live one — so if it's left frozen
+		// at its mount-time size, the gap stays sized for whatever the
+		// legend looked like then. When content that changes the legend's
+		// width changes later (e.g. the count badge growing from a single
+		// digit to two), the skip gap doesn't grow with it, and the border
+		// resumes early — cutting straight through the new content instead
+		// of routing around it.
+		const cloneLegend = clone.querySelector("legend");
+
 		element.insertAdjacentElement("afterend", clone);
 
 		// ── Legend overlay ────────────────────────────────────────────────
@@ -186,6 +197,23 @@ export default function useBorderSpotlight(collapsed = false)
 				node.style.color = "var(--border, #fff)";
 			});
 
+			// The collapse-all button is the only piece of the header with
+			// its own CSS transition (it eases its width/opacity in and out
+			// over 150ms — see .group-hd-collapse-btn in App.css). This
+			// overlay is a clone re-synced via innerHTML further down, so
+			// it never sees that transition play out — a freshly-created
+			// node just renders at its immediate final size. Left visible,
+			// it'd flash to its end state instantly while the real button
+			// underneath is still easing toward it, a "ghost" of the
+			// button's final size sitting inside the glow mask. Hiding it
+			// (not display:none, so the overlay's own width still matches
+			// the original's) sidesteps that mismatch entirely — the glow
+			// effect was never meant to apply to this button anyway.
+			legendOverlay.querySelectorAll(".group-hd-collapse-btn").forEach((btn) =>
+			{
+				btn.style.visibility = "hidden";
+			});
+
 			parent.appendChild(legendOverlay);
 		}
 
@@ -208,6 +236,23 @@ export default function useBorderSpotlight(collapsed = false)
 				{
 					node.style.color = "var(--border, #fff)";
 				});
+				legendOverlay.querySelectorAll(".group-hd-collapse-btn").forEach((btn) =>
+				{
+					btn.style.visibility = "hidden";
+				});
+
+				// Same resync, but for the clone's own legend — this is the
+				// one that actually drives the native border-skip gap, so
+				// it needs to grow/shrink with the real legend too (see the
+				// comment by cloneLegend's declaration above).
+				if (cloneLegend)
+				{
+					cloneLegend.innerHTML = originalLegend.innerHTML;
+					cloneLegend.querySelectorAll("*").forEach((node) =>
+					{
+						node.style.visibility = "hidden";
+					});
+				}
 			};
 
 			legendContentObserver = new MutationObserver(syncLegendContent);

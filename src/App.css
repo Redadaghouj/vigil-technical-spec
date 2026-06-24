@@ -257,9 +257,11 @@ body {
 	color: var(--text);
 	border: 1px solid transparent;
 	border-radius: 8px;
-	padding: 8px;
+	padding: 14px 18px;
 	margin-bottom: 28px;
 	display: flex;
+	align-items: center;
+	gap: 6px;
 	background: transparent;
 }
 
@@ -268,6 +270,7 @@ body {
 	align-items: center;
 	gap: 8px;
 	padding: 0 8px;
+	cursor: pointer;
 }
 
 .group-hd-label {
@@ -291,6 +294,75 @@ body {
 	width: 14px;
 	text-align: center;
 	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.group-hd-collapse-btn {
+	display: flex;
+	align-items: center;
+	margin-left: 8px;
+	padding: 6px 14px;
+	max-width: 140px;
+	overflow: hidden;
+	background: none;
+	border: 1px solid var(--border2);
+	border-radius: 5px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text2);
+	cursor: pointer;
+	opacity: 0.7;
+	transition:
+		opacity 0.15s ease-out,
+		background-color 0.15s,
+		color 0.15s,
+		max-width 0.15s ease-out,
+		padding-left 0.15s ease-out,
+		padding-right 0.15s ease-out,
+		border-left-width 0.15s ease-out,
+		border-right-width 0.15s ease-out,
+		margin-left 0.15s ease-out;
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+/* Stays in the DOM at all times (see GroupHeader.jsx) — but ONLY the
+   horizontal dimensions collapse here (max-width, left/right padding,
+   left/right border-width, margin-left). Vertical padding/border are
+   deliberately left alone: this button is taller than the rest of the
+   header row (its own padding+border exceed the label/toggle's line
+   height), so it's what sets the row's height — if vertical padding
+   collapsed too, the button would shrink below the row's other content
+   while disabled and grow past it again once enabled, changing the row's
+   height (and shoving the page below it down) on every toggle. Keeping
+   height constant while collapsing width is what actually fixes that:
+   the row reserves the button's height permanently, while a disabled
+   button still occupies zero visible width.
+
+   The leftover width isn't just the button's own box, either: `.group-hd`
+   and `.ep-section-head` both space their children with `gap: 6px` on the
+   flex container, which is inserted between every pair of items no matter
+   how small one of them gets. Pulling `margin-left` negative by that same
+   6px cancels it, so a disabled button takes up zero horizontal space
+   rather than leaving an empty gap. */
+.group-hd-collapse-btn:disabled {
+	opacity: 0;
+	pointer-events: none;
+	max-width: 0;
+	padding-left: 0;
+	padding-right: 0;
+	border-left-width: 0;
+	border-right-width: 0;
+	margin-left: -6px;
+}
+
+.group-hd-collapse-btn:hover {
+	opacity: 1;
+	color: var(--text);
+	background-color: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .meta-group-toggle {
@@ -440,6 +512,19 @@ body {
 	flex: 1;
 	height: 0.1px;
 	background: var(--border);
+	order: 1;
+}
+
+/* Collapse-all button reused inside .ep-section-head rows (Used by pages,
+   Endpoints used). The line above is a ::after pseudo-element, which always
+   renders as the row's last child regardless of where a real DOM sibling
+   sits in markup — so without explicit `order` here the button would end
+   up sandwiched BEFORE the line instead of past it. order:2 puts it after
+   the line (order:1), at the end of the row, exactly like .group-hd-collapse-btn
+   sits at the end of its own row. */
+.ep-section-collapse-btn {
+	order: 2;
+	margin-left: 8px;
 }
 
 /* useMaskSpotlight clones content into an overlay for the text-glow

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ENDPOINTS } from "../data";
 import useToggleSet from "../hooks/useToggleSet.js";
+import useOpenState from "../hooks/useOpenState.js";
 import MetaGroupSection from "../components/MetaGroupSection.jsx";
 import SecurityLayer from "../components/SecurityLayer.jsx";
 import StatChip from "../components/ui/StatChip.jsx";
@@ -10,9 +11,15 @@ import StatChip from "../components/ui/StatChip.jsx";
  */
 export default function EndpointsView({ highlightId })
 {
-	const [expanded, setExpanded] = useState(() =>
-		highlightId ? { [highlightId]: true } : {}
-	);
+	// Registry for all open/closed state — endpoint cards, payload sections,
+	// used-by toggles, and nested page cards inside used-by lists.
+	const [
+	   openKeys,
+	   isOpenState,
+	   toggleOpenState,
+	   collapseMatching
+	] = useOpenState();
+
 	const initialGroup = highlightId
 		? ENDPOINTS.find((e) => e.id === highlightId)?.group
 		: null;
@@ -45,12 +52,15 @@ export default function EndpointsView({ highlightId })
 	{
 		if (highlightId)
 		{
-			setExpanded((e) => ({ ...e, [highlightId]: true }));
+			// Open the highlighted endpoint card in the registry
+			const epKey = "ep:" + highlightId;
+			if (!isOpenState(epKey)) toggleOpenState(epKey);
+
 			const ep = ENDPOINTS.find((e) => e.id === highlightId);
 			if (ep?.group) ensureGroup(ep.group);
 			if (ep) ensureMetaGroup(ep.internal ? "Internal Facing" : "External Facing");
 		}
-	}, [highlightId, ensureGroup, ensureMetaGroup]);
+	}, [highlightId, ensureGroup, ensureMetaGroup, isOpenState, toggleOpenState]);
 
 	return (
 		<div>
@@ -92,8 +102,10 @@ export default function EndpointsView({ highlightId })
 						onToggle={() => toggleMetaGroup(meta)}
 						openGroups={openGroups}
 						toggleGroup={toggleGroup}
-						expanded={expanded}
-						setExpanded={setExpanded}
+						isOpenState={isOpenState}
+						toggleOpenState={toggleOpenState}
+						openKeys={openKeys}
+						collapseMatching={collapseMatching}
 						highlightId={highlightId}
 					/>
 				);

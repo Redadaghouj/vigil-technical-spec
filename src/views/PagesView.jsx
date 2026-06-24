@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { PAGES } from "../data";
 import useToggleSet from "../hooks/useToggleSet.js";
+import useOpenState from "../hooks/useOpenState.js";
 import groupBy from "../utils/groupBy.js";
 import PagesGroupSection from "../components/PagesGroupSection.jsx";
 import StatChip from "../components/ui/StatChip.jsx";
@@ -10,8 +11,20 @@ import StatChip from "../components/ui/StatChip.jsx";
  */
 export default function PagesView({ highlightPageId, highlightEndpointId })
 {
+	// Single-select open page — only one page card open at a time across the
+	// whole view (accordion behaviour, intentional). Kept separate from the
+	// openState registry so the collapse-all button can clear it independently.
 	const [open, setOpen] = useState(highlightPageId || null);
-	const [expandedEps, setExpandedEps] = useState({});
+
+	// Registry for every *other* collapsible thing: endpoint cards, payload
+	// sections, used-by toggles, and nested page cards inside used-by lists.
+	const [
+	   openKeys,
+	   isOpenState,
+	   toggleOpenState,
+	   collapseMatching
+	] = useOpenState();
+
 	const [openGroups, toggleGroup, ensureGroup] = useToggleSet();
 
 	useEffect(() =>
@@ -61,8 +74,10 @@ export default function PagesView({ highlightPageId, highlightEndpointId })
 					toggleGroup={toggleGroup}
 					open={open}
 					setOpen={setOpen}
-					expandedEps={expandedEps}
-					setExpandedEps={setExpandedEps}
+					isOpenState={isOpenState}
+					toggleOpenState={toggleOpenState}
+					openKeys={openKeys}
+					collapseMatching={collapseMatching}
 					highlightEndpointId={highlightEndpointId}
 				/>
 			))}

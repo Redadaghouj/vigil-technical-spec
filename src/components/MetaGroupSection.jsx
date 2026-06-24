@@ -4,8 +4,8 @@ import MetaGroupHeader from "./ui/MetaGroupHeader.jsx";
 import GroupSection from "./GroupSection.jsx";
 
 /**
- * MetaGroupSection - A meta group section with border spotlight
- * The ref is applied directly to the fieldset for the spotlight effect
+ * MetaGroupSection - A meta group section with border spotlight.
+ * Pure pass-through: forwards registry props down to GroupSection.
  */
 export default function MetaGroupSection({
 	meta,
@@ -14,21 +14,33 @@ export default function MetaGroupSection({
 	onToggle,
 	openGroups,
 	toggleGroup,
-	expanded,
-	setExpanded,
+	isOpenState,
+	toggleOpenState,
+	openKeys,
+	collapseMatching,
 	highlightId,
 })
 {
 	const ref = useBorderSpotlight(!isOpen);
 	const subGroups = groupBy(eps);
 
+	// Whitelist: legend (header) or the bare fieldset (border) only — see
+	// GroupSection.jsx for why a blacklist on `.collapsible` isn't safe
+	// here (nested GroupSections have their own headers outside their own
+	// `.collapsible`, which would otherwise wrongly bubble into a toggle).
+	function handleFieldsetClick(e)
+	{
+		if (e.target === e.currentTarget || e.target.closest(".meta-group-hd")) {
+			onToggle();
+		}
+	}
+
 	return (
-		<fieldset ref={ref} className="meta-group">
+		<fieldset ref={ref} className="meta-group" onClick={handleFieldsetClick}>
 			<MetaGroupHeader
 				label={meta}
 				count={eps.length}
 				collapsed={!isOpen}
-				onToggle={onToggle}
 			/>
 			<div className={"collapsible" + (isOpen ? " collapsible--open" : "")}>
 				<div className="collapsible-inner">
@@ -39,8 +51,10 @@ export default function MetaGroupSection({
 							groupEps={groupEps}
 							openGroups={openGroups}
 							toggleGroup={toggleGroup}
-							expanded={expanded}
-							setExpanded={setExpanded}
+							isOpenState={isOpenState}
+							toggleOpenState={toggleOpenState}
+							openKeys={openKeys}
+							collapseMatching={collapseMatching}
 							highlightId={highlightId}
 						/>
 					))}

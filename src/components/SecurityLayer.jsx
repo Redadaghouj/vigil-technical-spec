@@ -11,7 +11,6 @@ export default function SecurityLayer({ open, onToggle })
 			<div className="ep-card-header" onClick={onToggle}>
 				<span className="badge badge--sec">SECURITY</span>
 				<span className="ep-route">Spring Security · Bucket4j</span>
-				<span className="ep-toggle">{open ? "−" : "+"}</span>
 			</div>
 			<div className={`collapsible${open ? " collapsible--open" : ""}`}>
 				<div className="collapsible-inner ep-body">
